@@ -11,9 +11,9 @@ import { Phone, ChevronDown, Loader2, Sparkles } from 'lucide-react'
 
 // Dynamic validation schemas
 const createPhoneSchema = (countryCode) => z.object({
-  countryCode: z.string().min(1, 'Please select a country'),
+  countryCode: z.string().min(1, 'Please select a country.'),
   phoneNumber: z.string()
-    .regex(/^\d+$/, 'Phone number must contain only digits')
+    .regex(/^\d+$/, 'Phone number must contain only digits.')
     .refine(
       (phone) => validatePhoneNumber(phone, countryCode),
       { message: getPhoneValidationMessage(countryCode) }
@@ -22,17 +22,17 @@ const createPhoneSchema = (countryCode) => z.object({
 
 const otpSchema = z.object({
   otp: z.string()
-    .length(6, 'OTP must be exactly 6 digits')
-    .regex(/^\d+$/, 'OTP must contain only digits')
+    .length(6, 'OTP must be exactly 6 digits.')
+    .regex(/^\d+$/, 'OTP must contain only digits.')
 })
 
 const userInfoSchema = z.object({
   name: z.string()
-    .min(2, 'Name must be at least 2 characters')
-    .max(50, 'Name must be at most 50 characters')
-    .regex(/^[a-zA-Z\s]+$/, 'Name must contain only letters and spaces'),
+    .min(2, 'Name must be at least 2 characters.')
+    .max(50, 'Name must be at most 50 characters.')
+    .regex(/^[a-zA-Z\s]+$/, 'Name must contain only letters and spaces.'),
   email: z.string()
-    .email('Please enter a valid email address')
+    .email('Please enter a valid email address.')
     .optional()
     .or(z.literal(''))
 })
@@ -41,7 +41,7 @@ function AuthPage() {
   const dispatch = useDispatch()
   const { otpSent, loading, showUserInfoForm, phoneNumber: storedPhoneNumber, countryCode: storedCountryCode } = useSelector(state => state.auth)
   const [isLoginMode, setIsLoginMode] = useState(true)
-  
+
   const [countries, setCountries] = useState([])
   const [filteredCountries, setFilteredCountries] = useState([])
   const [countrySearch, setCountrySearch] = useState('')
@@ -51,12 +51,32 @@ function AuthPage() {
 
   // Phone form - will be recreated when country changes
   const phoneForm = useForm({
-    resolver: selectedCountry ? zodResolver(createPhoneSchema(selectedCountry.dialCode)) : undefined,
+    resolver: selectedCountry
+      ? zodResolver(
+        z.object({
+          ...createPhoneSchema(selectedCountry.dialCode).shape,
+          ...(!isLoginMode
+            ? {
+              name: z.string()
+                .min(2, 'Name must be at least 2 characters.')
+                .max(50, 'Name must be at most 50 characters.')
+                .regex(/^[A-Za-z\s]+$/, 'Name must contain only letters and spaces.'),
+              email: z.string()
+                .email('Please enter a valid email address.')
+                .optional()
+                .or(z.literal(''))
+            }
+            : {})
+        })
+      )
+      : undefined,
     defaultValues: {
       countryCode: storedCountryCode || '',
-      phoneNumber: storedPhoneNumber || ''
+      phoneNumber: storedPhoneNumber || '',
+      ...(!isLoginMode ? { name: '', email: '' } : {})
     }
   })
+
 
   // OTP form
   const otpForm = useForm({
@@ -78,13 +98,13 @@ function AuthPage() {
   // Memoized function to load countries
   const loadCountries = useCallback(async () => {
     if (countries.length > 0) return // Don't load if already loaded
-    
+
     try {
       const countryData = await fetchCountries()
-      
+
       setCountries(countryData)
       setFilteredCountries(countryData)
-      
+
       // Set default country (US)
       const defaultCountry = countryData.find(c => c.code === 'US') || countryData[0]
       if (defaultCountry && !storedCountryCode) {
@@ -97,7 +117,7 @@ function AuthPage() {
         }
       }
     } catch (error) {
-      toast.error('Failed to load countries')
+      toast.error('Failed to load countries.')
     } finally {
       setCountriesLoading(false)
     }
@@ -117,31 +137,15 @@ function AuthPage() {
   // Handle phone form submission
   const onPhoneSubmit = async (data) => {
     try {
-      // For signup mode, also validate name and email fields
-      if (!isLoginMode) {
-        const nameValidation = userInfoForm.getValues('name')
-        const emailValidation = userInfoForm.getValues('email')
-        
-        if (!nameValidation || nameValidation.trim().length < 2) {
-          toast.error('Please enter your full name')
-          return
-        }
-        
-        if (emailValidation && !/\S+@\S+\.\S+/.test(emailValidation)) {
-          toast.error('Please enter a valid email address')
-          return
-        }
-      }
-      
       const result = await dispatch(sendOTP(data.phoneNumber, data.countryCode, isLoginMode))
       if (result.success) {
         toast.success('OTP sent successfully!')
       } else {
-        toast.error(result.error || 'Failed to send OTP')
+        toast.error(result.error || 'Failed to send OTP.')
       }
     } catch (error) {
       console.error('Phone submission error:', error)
-      toast.error('Failed to send OTP')
+      toast.error('Failed to send OTP.')
     }
   }
 
@@ -152,14 +156,14 @@ function AuthPage() {
       if (!isLoginMode) {
         // For signup, get user info from form
         userInfo = {
-          name: userInfoForm.getValues('name'),
-          email: userInfoForm.getValues('email') || ''
+          name: phoneForm.getValues('name'),
+          email: phoneForm.getValues('email') || ''
         }
       }
-      
+
       const result = await dispatch(verifyOTP(data.otp, storedPhoneNumber, storedCountryCode, isLoginMode, userInfo))
       console.log('OTP verification result:', result)
-      
+
       if (result.success) {
         if (result.showUserForm) {
           toast.success('OTP verified! Please complete your profile.')
@@ -168,10 +172,10 @@ function AuthPage() {
           // Navigation should happen automatically via Redux state change
         }
       } else {
-        toast.error(result.error || 'Invalid OTP')
+        toast.error(result.error || 'Invalid OTP.')
       }
     } catch (error) {
-      toast.error('Failed to verify OTP')
+      toast.error('Failed to verify OTP.')
     }
   }
 
@@ -186,11 +190,11 @@ function AuthPage() {
         countryCode: storedCountryCode,
         joinedAt: new Date().toISOString()
       }
-      
+
       dispatch(setUserInfo(userInfo))
       toast.success(`Welcome, ${data.name}! Your account has been created.`)
     } catch (error) {
-      toast.error('Failed to create account')
+      toast.error('Failed to create account.')
     }
   }
 
@@ -202,21 +206,22 @@ function AuthPage() {
     setShowCountryDropdown(false)
     setCountrySearch('')
   }
-  
+
   // Handle phone number input formatting
   const handlePhoneNumberChange = (e) => {
     const formatted = formatPhoneInput(e.target.value)
     const pattern = selectedCountry ? getPhonePattern(selectedCountry.dialCode) : getPhonePattern('default')
-    
+
     if (formatted.length <= pattern.maxLength) {
       phoneForm.setValue('phoneNumber', formatted)
     }
   }
-  
+
   // Handle OTP input formatting  
   const handleOTPChange = (e) => {
     const formatted = formatOTPInput(e.target.value)
     otpForm.setValue('otp', formatted)
+    otpForm.trigger('otp')
   }
 
   // Handle back to phone input
@@ -259,7 +264,7 @@ function AuthPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Full Name *
+                  Full Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   {...userInfoForm.register('name')}
@@ -324,17 +329,21 @@ function AuthPage() {
               {!isLoginMode && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Full Name *
+                    Full Name <span className="text-red-500">*</span>
                   </label>
                   <input
-                    {...userInfoForm.register('name')}
+                    {...phoneForm.register('name')}
                     type="text"
                     placeholder="Enter your full name"
                     className="input-field"
+                    onInput={(e) => {
+                      e.target.value = e.target.value.replace(/[^A-Za-z\s]/g, '')
+                      phoneForm.trigger('name') // clears error when valid
+                    }}
                   />
-                  {userInfoForm.formState.errors.name && (
+                  {phoneForm.formState.errors.name && (
                     <p className="text-red-500 text-sm mt-1">
-                      {userInfoForm.formState.errors.name.message}
+                      {phoneForm.formState.errors.name.message}
                     </p>
                   )}
                 </div>
@@ -347,14 +356,15 @@ function AuthPage() {
                     Email Address (Optional)
                   </label>
                   <input
-                    {...userInfoForm.register('email')}
+                    {...phoneForm.register('email')}
                     type="email"
                     placeholder="Enter your email address"
                     className="input-field"
+                    onInput={() => phoneForm.trigger('email')}
                   />
-                  {userInfoForm.formState.errors.email && (
+                  {phoneForm.formState.errors.email && (
                     <p className="text-red-500 text-sm mt-1">
-                      {userInfoForm.formState.errors.email.message}
+                      {phoneForm.formState.errors.email.message}
                     </p>
                   )}
                 </div>
@@ -362,9 +372,9 @@ function AuthPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Phone Number *
+                  Phone Number <span className="text-red-500">*</span>
                 </label>
-                
+
                 {/* Country Selector */}
                 <div className="relative">
                   <button
@@ -425,7 +435,10 @@ function AuthPage() {
                       placeholder={selectedCountry ? getPhonePattern(selectedCountry.dialCode).placeholder : "Enter your phone number"}
                       maxLength={selectedCountry ? getPhonePattern(selectedCountry.dialCode).maxLength : 15}
                       className="input-field rounded-l-none"
-                      onChange={handlePhoneNumberChange}
+                      onChange={(e) => {
+                        handlePhoneNumberChange(e);
+                        phoneForm.trigger('phoneNumber'); // ✅ clear error when valid
+                      }}
                       onKeyPress={(e) => {
                         // Only allow digits
                         if (!/[\d]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Enter'].includes(e.key)) {
@@ -435,7 +448,7 @@ function AuthPage() {
                     />
                   </div>
                 </div>
-                
+
                 {phoneForm.formState.errors.phoneNumber && (
                   <p className="text-red-500 text-sm mt-1">
                     {phoneForm.formState.errors.phoneNumber.message}
@@ -450,7 +463,7 @@ function AuthPage() {
 
               <button
                 type="submit"
-                disabled={loading || !selectedCountry}
+                disabled={loading}
                 className="w-full btn-primary flex items-center justify-center space-x-2"
               >
                 {loading ? (

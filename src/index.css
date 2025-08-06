@@ -14,15 +14,15 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-gradient-to-r from-gemini-blue to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl min-h-[48px] text-base;
+    @apply bg-gradient-to-r from-gemini-blue to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl min-h-[42px] text-sm;
   }
   
   .btn-secondary {
-    @apply bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 hover:border-white/30 text-gray-700 dark:text-gray-200 font-semibold py-3 px-6 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transform hover:scale-[1.02] active:scale-[0.98] min-h-[48px] text-base;
+    @apply bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 hover:border-white/30 text-gray-700 dark:text-gray-200 font-semibold py-2.5 px-5 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transform hover:scale-[1.02] active:scale-[0.98] min-h-[42px] text-sm;
   }
   
   .input-field {
-    @apply w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white transition-all duration-300 hover:border-gray-300 dark:hover:border-gray-500 placeholder:text-gray-500 dark:placeholder:text-gray-400 min-h-[44px] text-base;
+    @apply w-full px-3 py-2.5 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white transition-all duration-300 hover:border-gray-300 dark:hover:border-gray-500 placeholder:text-gray-500 dark:placeholder:text-gray-400 min-h-[40px] text-sm;
   }
   
   .card {
@@ -60,8 +60,24 @@
     @apply block text-base font-semibold text-gray-700 dark:text-gray-300 mb-2;
   }
   
+  .form-label-required {
+    @apply block text-base font-semibold text-gray-700 dark:text-gray-300 mb-2;
+  }
+  
+  .form-label-required::after {
+    content: ' *';
+    color: #ef4444 !important;
+    font-weight: bold !important;
+    font-size: inherit !important;
+  }
+  
   .form-error {
-    @apply text-red-500 text-sm font-medium animate-fade-in flex items-center space-x-2;
+    @apply text-red-500 text-sm font-medium animate-fade-in mt-2 flex items-start space-x-1;
+  }
+  
+  .form-error::before {
+    content: '⚠';
+    @apply text-red-500 mt-0.5 flex-shrink-0;
   }
   
   .form-success {
@@ -82,7 +98,7 @@
   }
   
   .country-button {
-    @apply flex items-center space-x-2 px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-l-lg bg-gray-50/80 dark:bg-gray-700/80 hover:bg-gray-100/80 dark:hover:bg-gray-600/80 transition-all duration-300 backdrop-blur-sm min-w-[100px] min-h-[44px];
+    @apply flex items-center space-x-2 px-3 py-2.5 border border-gray-200 dark:border-gray-600 rounded-l-lg bg-gray-50/80 dark:bg-gray-700/80 hover:bg-gray-100/80 dark:hover:bg-gray-600/80 transition-all duration-300 backdrop-blur-sm min-w-[90px] min-h-[40px];
   }
   
   .country-dropdown {
@@ -94,7 +110,7 @@
   }
   
   .otp-input {
-    @apply input-field text-center text-2xl tracking-[0.5em] font-bold min-h-[52px];
+    @apply input-field text-center text-xl tracking-[0.4em] font-bold min-h-[48px];
   }
   
   .header-icon {
@@ -144,11 +160,11 @@
   /* Mobile-specific styles */
   @screen sm {
     .country-button {
-      @apply min-w-[110px] px-4;
+      @apply min-w-[95px] px-3;
     }
     
     .otp-input {
-      @apply text-2xl tracking-[0.4em] min-h-[54px];
+      @apply text-xl tracking-[0.3em] min-h-[50px];
     }
     
     .form-field {
@@ -156,11 +172,11 @@
     }
     
     .btn-primary, .btn-secondary {
-      @apply py-3.5 min-h-[50px] text-base;
+      @apply py-2.5 min-h-[44px] text-sm;
     }
     
     .input-field {
-      @apply py-3 min-h-[46px] text-base;
+      @apply py-2.5 min-h-[42px] text-sm;
     }
   }
   
@@ -174,15 +190,15 @@
     }
     
     .btn-primary, .btn-secondary {
-      @apply py-4 min-h-[52px] text-lg;
+      @apply py-3 min-h-[46px] text-base;
     }
     
     .input-field {
-      @apply py-4 min-h-[50px] text-lg;
+      @apply py-3 min-h-[46px] text-base;
     }
     
     .otp-input {
-      @apply text-3xl min-h-[60px];
+      @apply text-2xl min-h-[54px];
     }
   }
   

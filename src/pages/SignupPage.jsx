@@ -50,8 +50,8 @@ function SignupPage() {
   // Signup form
   const signupForm = useForm({
     resolver: selectedCountry ? zodResolver(createSignupSchema(selectedCountry.dialCode)) : undefined,
-    mode: 'onSubmit',
-    reValidateMode: 'onBlur',
+    mode: 'onChange',
+    reValidateMode: 'onChange',
     defaultValues: {
       name: '',
       email: '',
@@ -63,8 +63,8 @@ function SignupPage() {
   // OTP form
   const otpForm = useForm({
     resolver: zodResolver(otpSchema),
-    mode: 'onSubmit',
-    reValidateMode: 'onBlur',
+    mode: 'onChange',
+    reValidateMode: 'onChange',
     defaultValues: {
       otp: ''
     }
@@ -102,6 +102,7 @@ function SignupPage() {
     setFilteredCountries(filtered)
   }, [countries, countrySearch])
 
+
   // Handle signup form submission
   const onSignupSubmit = async (data) => {
     if (loading) return // Prevent double submission
@@ -109,9 +110,6 @@ function SignupPage() {
     setLoading(true)
 
     try {
-      // Clear any existing errors
-      signupForm.clearErrors()
-
       await new Promise(resolve => setTimeout(resolve, 1000))
 
       // Check if user already exists
@@ -189,14 +187,10 @@ function SignupPage() {
 
   const handleCountrySelect = (country) => {
     setSelectedCountry(country)
-    signupForm.setValue('countryCode', country.dialCode)
-    signupForm.setValue('phoneNumber', '')
+    signupForm.setValue('countryCode', country.dialCode, { shouldValidate: true })
+    signupForm.setValue('phoneNumber', '', { shouldValidate: true })
     setShowCountryDropdown(false)
     setCountrySearch('')
-    // Clear country code error since a country is selected
-    signupForm.clearErrors('countryCode')
-    // Also clear phone number error since we're resetting it
-    signupForm.clearErrors('phoneNumber')
   }
 
   const handlePhoneNumberChange = (e) => {
@@ -204,27 +198,13 @@ function SignupPage() {
     const pattern = selectedCountry ? getPhonePattern(selectedCountry?.dialCode) : getPhonePattern('default')
 
     if (formatted.length <= pattern.maxLength) {
-      signupForm.setValue('phoneNumber', formatted)
-      if (signupForm.formState.errors.phoneNumber) {
-        signupForm.clearErrors('phoneNumber')
-      }
+      signupForm.setValue('phoneNumber', formatted, { shouldValidate: true })
     }
-  }
-
-  const handlePhoneNumberFocus = () => {
-    signupForm.clearErrors('phoneNumber')
   }
 
   const handleOTPChange = (e) => {
     const formatted = formatOTPInput(e.target.value)
-    otpForm.setValue('otp', formatted)
-    if (otpForm.formState.errors.otp) {
-      otpForm.clearErrors('otp')
-    }
-  }
-
-  const handleOTPFocus = () => {
-    otpForm.clearErrors('otp')
+    otpForm.setValue('otp', formatted, { shouldValidate: true })
   }
 
   const handleBackToSignup = () => {
@@ -251,11 +231,11 @@ function SignupPage() {
         <div className="card p-6 sm:p-8 animate-bounce-in">
           {!otpSent ? (
             // Signup Form
-            <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-4 md:space-y-5">
+            <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-4 md:space-y-5" autoComplete="off" data-form-type="signup">
               {/* Name Field */}
               <div className="form-field">
-                <label className="form-label">
-                  Full Name *
+                <label className="form-label-required">
+                  Full Name
                 </label>
                 <div className="relative">
                   <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -263,14 +243,12 @@ function SignupPage() {
                     {...signupForm.register('name')}
                     type="text"
                     placeholder="Enter your full name"
-                    className="input-field pl-10"
-                    onFocus={() => signupForm.clearErrors('name')}
-                    onChange={(e) => {
-                      signupForm.setValue('name', e.target.value)
-                      if (signupForm.formState.errors.name) {
-                        signupForm.clearErrors('name')
-                      }
-                    }}
+                    className="input-field pl-9"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
+                    data-form-type="other"
                   />
                 </div>
                 {signupForm.formState.errors.name && (
@@ -289,16 +267,14 @@ function SignupPage() {
                   <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
                     {...signupForm.register('email')}
-                    type="email"
+                    type="text"
                     placeholder="Enter your email address"
-                    className="input-field pl-10"
-                    onFocus={() => signupForm.clearErrors('email')}
-                    onChange={(e) => {
-                      signupForm.setValue('email', e.target.value)
-                      if (signupForm.formState.errors.email) {
-                        signupForm.clearErrors('email')
-                      }
-                    }}
+                    className="input-field pl-9"
+                    autoComplete="new-password"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
+                    data-form-type="other"
                   />
                 </div>
                 {signupForm.formState.errors.email && (
@@ -310,8 +286,8 @@ function SignupPage() {
 
               {/* Phone Number Field */}
               <div className="form-field">
-                <label className="form-label">
-                  Phone Number *
+                <label className="form-label-required">
+                  Phone Number
                 </label>
 
                 {/* Country Selector */}
@@ -370,17 +346,21 @@ function SignupPage() {
                   <div className="flex-1">
                     <input
                       {...signupForm.register('phoneNumber')}
-                      type="tel"
+                      type="text"
                       placeholder={selectedCountry ? getPhonePattern(selectedCountry.dialCode).placeholder : "Enter your phone number"}
                       maxLength={selectedCountry ? getPhonePattern(selectedCountry.dialCode).maxLength : 15}
                       className="input-field rounded-l-none border-l-0 focus:border-l focus:border-blue-500"
-                      onFocus={handlePhoneNumberFocus}
                       onChange={handlePhoneNumberChange}
                       onKeyPress={(e) => {
                         if (!/[\d]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Enter'].includes(e.key)) {
                           e.preventDefault()
                         }
                       }}
+                      autoComplete="new-password"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck="false"
+                      data-form-type="other"
                     />
                   </div>
                 </div>
@@ -394,7 +374,7 @@ function SignupPage() {
 
               <button
                 type="submit"
-                disabled={loading || !selectedCountry || countriesLoading}
+                disabled={loading || countriesLoading}
                 className={`w-full btn-primary flex items-center justify-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:hover:scale-100 ${loading ? 'btn-loading' : ''}`}
               >
                 {loading ? (
@@ -424,7 +404,7 @@ function SignupPage() {
             </form>
           ) : (
             // OTP Verification Form
-            <form onSubmit={otpForm.handleSubmit(onOTPSubmit)} className="space-y-5 md:space-y-6 animate-fade-in">
+            <form onSubmit={otpForm.handleSubmit(onOTPSubmit)} className="space-y-5 md:space-y-6 animate-fade-in" autoComplete="off" data-form-type="otp">
               <div className="text-center mb-6">
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mb-4">
                   <Phone className="w-8 h-8 text-white" />
@@ -447,7 +427,6 @@ function SignupPage() {
                   placeholder="000000"
                   maxLength={6}
                   className="otp-input"
-                  onFocus={handleOTPFocus}
                   onChange={handleOTPChange}
                   onKeyPress={(e) => {
                     if (!/[\d]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Enter'].includes(e.key)) {
@@ -455,6 +434,11 @@ function SignupPage() {
                     }
                   }}
                   autoFocus
+                  autoComplete="one-time-code"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
+                  data-form-type="other"
                 />
                 {otpForm.formState.errors.otp && (
                   <p className="form-error">
@@ -466,7 +450,7 @@ function SignupPage() {
               <div className="space-y-4">
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !otpForm.watch('otp') || otpForm.watch('otp').length !== 6}
                   className={`w-full btn-primary flex items-center justify-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:hover:scale-100 ${loading ? 'btn-loading' : ''}`}
                 >
                   {loading ? (

@@ -101,6 +101,7 @@ function Sidebar({ isOpen, onToggle }) {
     setLogoutModal(true)
   }
 
+
   const confirmLogout = () => {
     dispatch(logout())
     toast.success('Logged out successfully!')
@@ -194,6 +195,7 @@ function Sidebar({ isOpen, onToggle }) {
             <Plus className="w-4 h-4" />
             <span>New Chat</span>
           </button>
+          
         </div>
 
         {/* Search */}

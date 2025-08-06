@@ -24,6 +24,9 @@ function App() {
   useEffect(() => {
     const initializeAuth = () => {
       try {
+        // Clear any old auth localStorage entries that might conflict
+        localStorage.removeItem('auth')
+        
         // Initialize with test users if none exist (for development)
         const existingUsers = localStorage.getItem('gemini_users')
         if (!existingUsers) {

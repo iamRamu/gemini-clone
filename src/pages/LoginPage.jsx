@@ -31,7 +31,7 @@ function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [otpSent, setOtpSent] = useState(false)
   const [storedData, setStoredData] = useState({})
-  
+
   const [countries, setCountries] = useState([])
   const [filteredCountries, setFilteredCountries] = useState([])
   const [countrySearch, setCountrySearch] = useState('')
@@ -42,8 +42,8 @@ function LoginPage() {
   // Phone form
   const phoneForm = useForm({
     resolver: selectedCountry ? zodResolver(createPhoneSchema(selectedCountry.dialCode)) : undefined,
-    mode: 'onSubmit',
-    reValidateMode: 'onBlur',
+    mode: 'onChange',
+    reValidateMode: 'onChange',
     defaultValues: {
       countryCode: '',
       phoneNumber: ''
@@ -53,8 +53,8 @@ function LoginPage() {
   // OTP form
   const otpForm = useForm({
     resolver: zodResolver(otpSchema),
-    mode: 'onSubmit',
-    reValidateMode: 'onBlur',
+    mode: 'onChange',
+    reValidateMode: 'onChange',
     defaultValues: {
       otp: ''
     }
@@ -63,12 +63,12 @@ function LoginPage() {
   // Load countries
   const loadCountries = useCallback(async () => {
     if (countries.length > 0) return
-    
+
     try {
       const countryData = await fetchCountries()
       setCountries(countryData)
       setFilteredCountries(countryData)
-      
+
       // Set default country (US)
       const defaultCountry = countryData.find(c => c.code === 'US') || countryData[0]
       if (defaultCountry) {
@@ -95,31 +95,31 @@ function LoginPage() {
   // Handle phone form submission
   const onPhoneSubmit = async (data) => {
     if (loading) return // Prevent double submission
-    
+
     setLoading(true)
-    
+
     try {
       // Clear any existing errors
       phoneForm.clearErrors()
-      
+
       await new Promise(resolve => setTimeout(resolve, 1000))
-      
+
       // Check if user exists
       const existingUsers = JSON.parse(localStorage.getItem('gemini_users') || '[]')
-      const userExists = existingUsers.find(user => 
+      const userExists = existingUsers.find(user =>
         user.phoneNumber === data.phoneNumber && user.countryCode === data.countryCode
       )
-      
+
       if (!userExists) {
         toast.error('No account found with this phone number. Please sign up first.')
         setLoading(false)
         return
       }
-      
+
       setStoredData(data)
       setOtpSent(true)
       toast.success('OTP sent successfully!')
-      
+
     } catch (error) {
       toast.error('Failed to send OTP')
     } finally {
@@ -130,33 +130,33 @@ function LoginPage() {
   // Handle OTP form submission
   const onOTPSubmit = async (data) => {
     if (loading) return // Prevent double submission
-    
+
     setLoading(true)
-    
+
     try {
       // Clear any existing errors
       otpForm.clearErrors()
-      
+
       await new Promise(resolve => setTimeout(resolve, 1000))
-      
+
       // Validate OTP (accept any 6-digit number for demo)
       if (data.otp.length === 6) {
         // Get user from localStorage
         const existingUsers = JSON.parse(localStorage.getItem('gemini_users') || '[]')
-        const user = existingUsers.find(user => 
+        const user = existingUsers.find(user =>
           user.phoneNumber === storedData.phoneNumber && user.countryCode === storedData.countryCode
         )
-        
+
         if (user) {
           // Save current user session
           localStorage.setItem('gemini_current_user', JSON.stringify(user))
-          
+
           // Dispatch login success
           dispatch({
             type: 'LOGIN_SUCCESS',
             payload: user
           })
-          
+
           toast.success('Login successful!')
         } else {
           toast.error('User not found')
@@ -174,36 +174,24 @@ function LoginPage() {
 
   const handleCountrySelect = (country) => {
     setSelectedCountry(country)
-    phoneForm.setValue('countryCode', country.dialCode)
-    phoneForm.setValue('phoneNumber', '')
+    phoneForm.setValue('countryCode', country.dialCode, { shouldValidate: true })
+    phoneForm.setValue('phoneNumber', '', { shouldValidate: true })
     setShowCountryDropdown(false)
     setCountrySearch('')
-    // Clear country code error since a country is selected
-    phoneForm.clearErrors('countryCode')
-    // Also clear phone number error since we're resetting it
-    phoneForm.clearErrors('phoneNumber')
   }
-  
+
   const handlePhoneNumberChange = (e) => {
     const formatted = formatPhoneInput(e.target.value)
     const pattern = selectedCountry ? getPhonePattern(selectedCountry.dialCode) : getPhonePattern('default')
-    
+
     if (formatted.length <= pattern.maxLength) {
-      phoneForm.setValue('phoneNumber', formatted)
+      phoneForm.setValue('phoneNumber', formatted, { shouldValidate: true })
     }
   }
-  
-  const handlePhoneNumberFocus = () => {
-    phoneForm.clearErrors('phoneNumber')
-  }
-  
+
   const handleOTPChange = (e) => {
     const formatted = formatOTPInput(e.target.value)
-    otpForm.setValue('otp', formatted)
-  }
-  
-  const handleOTPFocus = () => {
-    otpForm.clearErrors('otp')
+    otpForm.setValue('otp', formatted, { shouldValidate: true })
   }
 
   const handleBackToPhone = () => {
@@ -230,12 +218,12 @@ function LoginPage() {
         <div className="card p-6 sm:p-8 animate-bounce-in">
           {!otpSent ? (
             // Phone Number Form
-            <form onSubmit={phoneForm.handleSubmit(onPhoneSubmit)} className="space-y-5 md:space-y-6">
+            <form onSubmit={phoneForm.handleSubmit(onPhoneSubmit)} className="space-y-5 md:space-y-6" autoComplete="off" data-form-type="login">
               <div className="form-field">
-                <label className="form-label">
-                  Phone Number *
+                <label className="form-label-required">
+                  Phone Number
                 </label>
-                
+
                 {/* Country Selector */}
                 <div className="relative">
                   <button
@@ -292,21 +280,25 @@ function LoginPage() {
                   <div className="flex-1">
                     <input
                       {...phoneForm.register('phoneNumber')}
-                      type="tel"
+                      type="text"
                       placeholder={selectedCountry ? getPhonePattern(selectedCountry.dialCode).placeholder : "Enter your phone number"}
                       maxLength={selectedCountry ? getPhonePattern(selectedCountry.dialCode).maxLength : 15}
                       className="input-field rounded-l-none border-l-0 focus:border-l focus:border-blue-500"
-                      onFocus={handlePhoneNumberFocus}
                       onChange={handlePhoneNumberChange}
                       onKeyPress={(e) => {
                         if (!/[\d]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Enter'].includes(e.key)) {
                           e.preventDefault()
                         }
                       }}
+                      autoComplete="new-password"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck="false"
+                      data-form-type="other"
                     />
                   </div>
                 </div>
-                
+
                 {phoneForm.formState.errors.phoneNumber && (
                   <p className="form-error">
                     {phoneForm.formState.errors.phoneNumber.message}
@@ -316,7 +308,7 @@ function LoginPage() {
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !selectedCountry || countriesLoading || !phoneForm.watch('phoneNumber')?.trim()}
                 className={`w-full btn-primary flex items-center justify-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:hover:scale-100 ${loading ? 'btn-loading' : ''}`}
               >
                 {loading ? (
@@ -346,7 +338,7 @@ function LoginPage() {
             </form>
           ) : (
             // OTP Verification Form
-            <form onSubmit={otpForm.handleSubmit(onOTPSubmit)} className="space-y-5 md:space-y-6 animate-fade-in">
+            <form onSubmit={otpForm.handleSubmit(onOTPSubmit)} className="space-y-5 md:space-y-6 animate-fade-in" autoComplete="off" data-form-type="otp">
               <div className="text-center mb-6">
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full mb-4">
                   <Phone className="w-8 h-8 text-white" />
@@ -369,7 +361,6 @@ function LoginPage() {
                   placeholder="000000"
                   maxLength={6}
                   className="otp-input"
-                  onFocus={handleOTPFocus}
                   onChange={handleOTPChange}
                   onKeyPress={(e) => {
                     if (!/[\d]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Enter'].includes(e.key)) {
@@ -377,6 +368,11 @@ function LoginPage() {
                     }
                   }}
                   autoFocus
+                  autoComplete="one-time-code"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
+                  data-form-type="other"
                 />
                 {otpForm.formState.errors.otp && (
                   <p className="form-error">
@@ -388,7 +384,7 @@ function LoginPage() {
               <div className="space-y-4">
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !otpForm.watch('otp') || otpForm.watch('otp')?.length !== 6}
                   className={`w-full btn-primary flex items-center justify-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:hover:scale-100 ${loading ? 'btn-loading' : ''}`}
                 >
                   {loading ? (

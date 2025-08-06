@@ -11,9 +11,17 @@ export const setCountryCode = (countryCode) => ({
   payload: countryCode
 })
 
-export const logout = () => ({
-  type: AUTH_ACTIONS.LOGOUT
-})
+export const logout = () => {
+  return (dispatch) => {
+    // Clear localStorage
+    localStorage.removeItem('gemini_current_user')
+    
+    // Dispatch logout action
+    dispatch({
+      type: AUTH_ACTIONS.LOGOUT
+    })
+  }
+}
 
 export const resetOTP = () => ({
   type: AUTH_ACTIONS.RESET_OTP

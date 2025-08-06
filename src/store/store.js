@@ -14,12 +14,11 @@ const thunk = (store) => (next) => (action) => {
 // Load initial state from localStorage
 const loadInitialState = () => {
   try {
-    const authState = localStorage.getItem('auth')
     const themeState = localStorage.getItem('theme')
     const chatState = localStorage.getItem('chat')
     
+    // Don't load auth state here - let App.jsx handle it
     return {
-      auth: authState ? JSON.parse(authState) : undefined,
       theme: themeState ? JSON.parse(themeState) : undefined,
       chat: chatState ? JSON.parse(chatState) : undefined
     }
@@ -45,11 +44,7 @@ store.subscribe(() => {
   const state = store.getState()
   
   try {
-    // Save auth state
-    localStorage.setItem('auth', JSON.stringify({
-      isAuthenticated: state.auth.isAuthenticated,
-      user: state.auth.user
-    }))
+    // Don't save auth state here - handled by individual auth actions
     
     // Save theme state
     localStorage.setItem('theme', JSON.stringify(state.theme))
