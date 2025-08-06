@@ -73,7 +73,7 @@ A modern, fully responsive AI chat application inspired by Google Gemini, built 
 
 1. **Clone & Navigate**
    ```bash
-   git clone https://github.com/yourusername/gemini-clone.git
+   git clone https://github.com/iamRamu/gemini-clone.git
    cd gemini-clone
    ```
 
@@ -90,7 +90,7 @@ A modern, fully responsive AI chat application inspired by Google Gemini, built 
    # or
    yarn dev
    ```
-   Open [http://localhost:5173](http://localhost:5173) in your browser
+   Open [http://localhost:3000](http://localhost:3000) in your browser
 
 4. **Production Build**
    ```bash
@@ -270,9 +270,9 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ## 📞 Support
 
 If you have questions or need help:
-- 📧 Email: your.email@example.com
-- 🐛 [Report Issues](https://github.com/yourusername/gemini-clone/issues)
-- 💬 [Discussions](https://github.com/yourusername/gemini-clone/discussions)
+- 📧 Email: g.ramu6523@gmail.com
+- 🐛 [Report Issues](https://github.com/iamRamu/gemini-clone/issues)
+- 💬 [Discussions](https://github.com/iamRamu/gemini-clone/discussions)
 
 ---
 
