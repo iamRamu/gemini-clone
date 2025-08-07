@@ -38,9 +38,9 @@ function Sidebar({ isOpen, onToggle }) {
   const { user } = useSelector(state => state.auth)
   const { chatrooms, searchQuery: storeSearchQuery } = useSelector(state => state.chat)
   const { isDarkMode } = useSelector(state => state.theme)
-  
-  // Debounce search query with 300ms delay
-  const debouncedSearchQuery = useDebounce(searchQuery, 300)
+
+  // Debounce search query with 3000ms delay
+  const debouncedSearchQuery = useDebounce(searchQuery, 3000)
   
   // Filter chatrooms based on debounced search query
   const filteredChatrooms = chatrooms.filter(chat =>
