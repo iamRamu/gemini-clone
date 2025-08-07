@@ -7,6 +7,16 @@ import store from './store/store'
 import App from './App.jsx'
 import './index.css'
 
+// Fix for mobile viewport height issues
+function setVH() {
+  let vh = window.innerHeight * 0.01
+  document.documentElement.style.setProperty('--vh', `${vh}px`)
+}
+
+setVH()
+window.addEventListener('resize', setVH)
+window.addEventListener('orientationchange', setVH)
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <Provider store={store}>

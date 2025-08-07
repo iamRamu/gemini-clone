@@ -212,7 +212,7 @@ function ChatRoom() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       {/* Header */}
-      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-3 sm:px-4 py-3">
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
         <div className="flex items-center justify-between">
           {/* Left side */}
           <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
@@ -384,7 +384,7 @@ function ChatRoom() {
       </div>
 
       {/* Message Input */}
-      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3 sm:p-4">
+      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4">
         {/* Images preview */}
         {selectedImages.length > 0 && (
           <div className="mb-3 flex flex-wrap gap-2">
@@ -423,6 +423,7 @@ function ChatRoom() {
             multiple
             onChange={handleImageUpload}
             className="hidden"
+            autoComplete="off"
           />
           
           {/* Message input */}
@@ -435,6 +436,7 @@ function ChatRoom() {
               rows={1}
               className="w-full max-h-32 px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none text-sm sm:text-base"
               style={{ minHeight: '36px' }}
+              autoComplete="off"
             />
           </div>
           

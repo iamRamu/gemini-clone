@@ -36,7 +36,7 @@ function Layout() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900" style={{ height: '100vh', minHeight: '100vh' }}>
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
       
@@ -47,7 +47,7 @@ function Layout() {
           : 'ml-0'
       }`}>
         {/* Header with Menu Button */}
-        <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+        <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 flex-shrink-0">
           <button
             onClick={toggleSidebar}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-200 ease-in-out"
@@ -58,7 +58,7 @@ function Layout() {
         </div>
         
         {/* Page Content */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden" style={{ minHeight: 0 }}>
           <Outlet />
         </div>
       </div>

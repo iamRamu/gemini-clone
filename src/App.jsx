@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import AuthPage from './pages/AuthPage'
 import Dashboard from './pages/Dashboard'
+import NotFoundPage from './pages/NotFoundPage'
 import Layout from './components/Layout'
 import ErrorBoundary from './components/ErrorBoundary'
 import { useEffect, useState } from 'react'
@@ -100,6 +101,8 @@ function App() {
               element={<Navigate to="/dashboard" />} 
             />
           </Route>
+          {/* Catch all route for 404 */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </div>
     </ErrorBoundary>

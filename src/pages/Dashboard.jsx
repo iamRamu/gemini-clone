@@ -189,9 +189,10 @@ function Dashboard() {
   // Show welcome screen if no chat is selected
   if (!chatId || !currentChat) {
     return (
-      <div className="h-full flex flex-col bg-white dark:bg-gray-900">
+      <div className="dashboard-container bg-white dark:bg-gray-900">
         {/* Main Content */}
-        <div className="flex-1 flex flex-col items-center justify-center p-6 max-w-3xl mx-auto">
+        <div className="flex-1 overflow-y-auto">
+          <div className="flex flex-col items-center justify-center min-h-full p-6 max-w-3xl mx-auto">
           {/* Gemini Logo */}
           <div className="mb-8">
             <div className="bg-gradient-to-r from-gemini-blue to-gemini-purple p-4 rounded-2xl mb-4">
@@ -218,33 +219,38 @@ function Dashboard() {
           )}
 
           {/* Suggestions */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl mb-8">
-            {suggestions.map((suggestion, index) => (
-              <button
-                key={index}
-                onClick={() => handleSuggestionClick(`${suggestion.title} ${suggestion.subtitle}`)}
-                className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left group"
-              >
-                <div className="flex items-start space-x-3">
-                  <div className="text-gemini-blue mt-1">
-                    {suggestion.icon}
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-gray-900 dark:text-white group-hover:text-gemini-blue transition-colors">
-                      {suggestion.title}
-                    </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      {suggestion.subtitle}
-                    </p>
-                  </div>
-                </div>
-              </button>
-            ))}
+          <div className="w-full max-w-2xl mb-8">
+            <div className="overflow-y-auto max-h-96 pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-gray-100 dark:scrollbar-track-gray-800">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {suggestions.map((suggestion, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleSuggestionClick(`${suggestion.title} ${suggestion.subtitle}`)}
+                    className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left group"
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div className="text-gemini-blue mt-1">
+                        {suggestion.icon}
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-gray-900 dark:text-white group-hover:text-gemini-blue transition-colors">
+                          {suggestion.title}
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          {suggestion.subtitle}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
           </div>
         </div>
 
         {/* Input Area */}
-        <div className="border-t border-gray-200 dark:border-gray-700 p-4">
+        <div className="input-area-sticky border-t border-gray-200 dark:border-gray-700 p-4">
           <div className="max-w-3xl mx-auto">
             {/* Images preview */}
             {selectedImages.length > 0 && (
@@ -284,6 +290,7 @@ function Dashboard() {
                 multiple
                 onChange={handleImageUpload}
                 className="hidden"
+                autoComplete="off"
               />
               
               {/* Message input */}
@@ -296,6 +303,7 @@ function Dashboard() {
                   rows={1}
                   className="w-full bg-transparent border-none focus:outline-none resize-none text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   style={{ minHeight: '24px', maxHeight: '120px' }}
+                  autoComplete="off"
                 />
               </div>
               
@@ -329,9 +337,9 @@ function Dashboard() {
 
   // Show chat interface if chat is selected
   return (
-    <div className="h-full flex flex-col bg-white dark:bg-gray-900">
+    <div className="dashboard-container bg-white dark:bg-gray-900">
       {/* Chat Header */}
-      <div className="border-b border-gray-200 dark:border-gray-700 p-4">
+      <div className="chat-header-fixed border-b border-gray-200 dark:border-gray-700 p-4">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-gradient-to-r from-gemini-blue to-gemini-purple rounded-lg flex items-center justify-center">
             <Sparkles className="w-5 h-5 text-white" />
@@ -348,7 +356,7 @@ function Dashboard() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+      <div className="messages-scrollable p-4 space-y-6">
         {chatMessages.map((msg) => (
           <div
             key={msg.id}
@@ -430,7 +438,7 @@ function Dashboard() {
       </div>
 
       {/* Input Area */}
-      <div className="border-t border-gray-200 dark:border-gray-700 p-4">
+      <div className="input-area-sticky border-t border-gray-200 dark:border-gray-700 p-4">
         {/* Images preview */}
         {selectedImages.length > 0 && (
           <div className="mb-4 flex flex-wrap gap-2">
@@ -469,6 +477,7 @@ function Dashboard() {
             multiple
             onChange={handleImageUpload}
             className="hidden"
+            autoComplete="off"
           />
           
           {/* Message input */}
@@ -481,6 +490,7 @@ function Dashboard() {
               rows={1}
               className="w-full bg-transparent border-none focus:outline-none resize-none text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               style={{ minHeight: '24px', maxHeight: '120px' }}
+              autoComplete="off"
             />
           </div>
           

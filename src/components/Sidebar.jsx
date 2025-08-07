@@ -208,6 +208,7 @@ function Sidebar({ isOpen, onToggle }) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
+              autoComplete="off"
             />
           </div>
         </div>
@@ -310,7 +311,7 @@ function Sidebar({ isOpen, onToggle }) {
               {showUserMenu && (
                 <div className="absolute bottom-full left-0 right-0 mb-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl py-2 z-50 animate-scale-in">
                   {/* User Info Section */}
-                  <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                  <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                     <div className="flex items-center space-x-3">
                       <div className="w-12 h-12 bg-gradient-to-r from-gemini-blue to-gemini-purple rounded-full flex items-center justify-center text-white font-medium text-lg shadow-lg">
                         {user?.name?.charAt(0)?.toUpperCase() || 'U'}
@@ -392,6 +393,7 @@ function Sidebar({ isOpen, onToggle }) {
                 }}
                 className="input-field mb-4"
                 autoFocus
+                autoComplete="off"
               />
               
               <div className="flex space-x-3">

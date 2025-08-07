@@ -51,6 +51,42 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
+    background-color: rgb(209 213 219);
+    border-radius: 3px;
+  }
+  
+  .dark .scrollbar-thumb-gray-600::-webkit-scrollbar-thumb {
+    background-color: rgb(75 85 99);
+    border-radius: 3px;
+  }
+  
+  .scrollbar-track-gray-100::-webkit-scrollbar-track {
+    background-color: rgb(243 244 246);
+    border-radius: 3px;
+  }
+  
+  .dark .scrollbar-track-gray-800::-webkit-scrollbar-track {
+    background-color: rgb(31 41 55);
+    border-radius: 3px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(156 163 175);
+  }
+  
+  .dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(107 114 128);
+  }
   
   .form-field {
     @apply space-y-2;
@@ -157,6 +193,75 @@
     @apply flex-1 px-6 py-3 bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-gray-500 transition-all duration-200 border border-gray-300 dark:border-gray-500 shadow-sm hover:shadow-md transform hover:scale-[1.02];
   }
   
+  /* Consistent border styling */
+  .border-line {
+    border-color: rgb(229 231 235);
+  }
+  
+  .dark .border-line {
+    border-color: rgb(55 65 81);
+  }
+
+  /* Mobile-specific height fixes */
+  .mobile-height-fix {
+    height: 100vh;
+    height: calc(var(--vh, 1vh) * 100);
+  }
+  
+  .dashboard-container {
+    height: 100vh;
+    height: calc(var(--vh, 1vh) * 100);
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .chat-header-fixed {
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: inherit;
+  }
+  
+  .messages-scrollable {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .input-area-sticky {
+    flex-shrink: 0;
+    position: sticky;
+    bottom: 0;
+    background: inherit;
+    z-index: 30;
+  }
+  
+  @media (max-width: 768px) {
+    .dashboard-container {
+      height: 100vh;
+      height: calc(var(--vh, 1vh) * 100);
+    }
+    
+    .messages-scrollable {
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    
+    .input-area-sticky {
+      padding-bottom: env(safe-area-inset-bottom, 16px);
+    }
+    
+    /* Prevent zoom on input focus */
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    textarea {
+      font-size: 16px;
+    }
+  }
+
   /* Mobile-specific styles */
   @screen sm {
     .country-button {

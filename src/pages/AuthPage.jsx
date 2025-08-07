@@ -272,6 +272,7 @@ function AuthPage() {
                   placeholder="Enter your full name"
                   className="input-field"
                   autoFocus
+                  autoComplete="off"
                 />
                 {userInfoForm.formState.errors.name && (
                   <p className="text-red-500 text-sm mt-1">
@@ -289,6 +290,7 @@ function AuthPage() {
                   type="email"
                   placeholder="Enter your email address"
                   className="input-field"
+                  autoComplete="off"
                 />
                 {userInfoForm.formState.errors.email && (
                   <p className="text-red-500 text-sm mt-1">
@@ -336,6 +338,7 @@ function AuthPage() {
                     type="text"
                     placeholder="Enter your full name"
                     className="input-field"
+                    autoComplete="off"
                     onInput={(e) => {
                       e.target.value = e.target.value.replace(/[^A-Za-z\s]/g, '')
                       phoneForm.trigger('name') // clears error when valid
@@ -360,6 +363,7 @@ function AuthPage() {
                     type="email"
                     placeholder="Enter your email address"
                     className="input-field"
+                    autoComplete="off"
                     onInput={() => phoneForm.trigger('email')}
                   />
                   {phoneForm.formState.errors.email && (
@@ -404,6 +408,7 @@ function AuthPage() {
                           type="text"
                           placeholder="Search countries..."
                           value={countrySearch}
+                          autoComplete="off"
                           onChange={(e) => setCountrySearch(e.target.value)}
                           className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700"
                         />
@@ -435,6 +440,7 @@ function AuthPage() {
                       placeholder={selectedCountry ? getPhonePattern(selectedCountry.dialCode).placeholder : "Enter your phone number"}
                       maxLength={selectedCountry ? getPhonePattern(selectedCountry.dialCode).maxLength : 15}
                       className="input-field rounded-l-none"
+                      autoComplete="off"
                       onChange={(e) => {
                         handlePhoneNumberChange(e);
                         phoneForm.trigger('phoneNumber'); // ✅ clear error when valid
@@ -514,6 +520,7 @@ function AuthPage() {
                   placeholder="Enter 6-digit OTP"
                   maxLength={6}
                   className="input-field text-center text-base sm:text-lg tracking-widest"
+                  autoComplete="off"
                   onChange={handleOTPChange}
                   onKeyPress={(e) => {
                     // Only allow digits

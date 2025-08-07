@@ -255,6 +255,7 @@ function LoginPage() {
                           value={countrySearch}
                           onChange={(e) => setCountrySearch(e.target.value)}
                           className="w-full px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/90 dark:bg-gray-700/90 backdrop-blur-sm"
+                          autoComplete="off"
                         />
                       </div>
                       <div className="max-h-48 overflow-y-auto scrollbar-hide">
@@ -284,6 +285,7 @@ function LoginPage() {
                       placeholder={selectedCountry ? getPhonePattern(selectedCountry.dialCode).placeholder : "Enter your phone number"}
                       maxLength={selectedCountry ? getPhonePattern(selectedCountry.dialCode).maxLength : 15}
                       className="input-field rounded-l-none border-l-0 focus:border-l focus:border-blue-500"
+                      autoComplete="off"
                       onChange={handlePhoneNumberChange}
                       onKeyPress={(e) => {
                         if (!/[\d]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Enter'].includes(e.key)) {
@@ -361,6 +363,7 @@ function LoginPage() {
                   placeholder="000000"
                   maxLength={6}
                   className="otp-input"
+                  autoComplete="off"
                   onChange={handleOTPChange}
                   onKeyPress={(e) => {
                     if (!/[\d]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Enter'].includes(e.key)) {
