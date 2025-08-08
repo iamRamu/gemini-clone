@@ -1,6 +1,6 @@
 import { CHAT_ACTIONS } from './chatReducer'
 import { generateMockMessages } from '../utils/mockData'
-import { callGeminiAPI } from '../utils/geminiApi'
+import { callGeminiAPI, callGeminiAPIStream } from '../utils/geminiApi'
 import { generateAIResponse, getTypingDuration } from '../utils/fakeAiApi'
 
 // Action Creators
@@ -38,8 +38,75 @@ export const initializeSampleData = () => ({
   type: CHAT_ACTIONS.INITIALIZE_SAMPLE_DATA
 })
 
-// Async Action for AI Response
+export const startStreamingMessage = (chatroomId, messageId) => ({
+  type: CHAT_ACTIONS.START_STREAMING_MESSAGE,
+  payload: { chatroomId, messageId }
+})
+
+export const updateStreamingMessage = (messageId, textChunk) => ({
+  type: CHAT_ACTIONS.UPDATE_STREAMING_MESSAGE,
+  payload: { messageId, textChunk }
+})
+
+export const endStreamingMessage = (messageId, finalText) => ({
+  type: CHAT_ACTIONS.END_STREAMING_MESSAGE,
+  payload: { messageId, finalText }
+})
+
+// Async Action for AI Response with Streaming
 export const sendAIResponse = (chatroomId, userMessage, conversationHistory = [], images = []) => {
+  return async (dispatch, getState) => {
+    dispatch(setTyping(true))
+    
+    // Generate unique message ID
+    const messageId = Math.random().toString(36).substr(2, 9)
+    
+    // Start streaming message
+    dispatch(startStreamingMessage(chatroomId, messageId))
+    
+    try {
+      let accumulatedText = ''
+      
+      // Use streaming API with chunk callback
+      const apiResponse = await callGeminiAPIStream(
+        userMessage, 
+        conversationHistory, 
+        images,
+        (textChunk) => {
+          // Clear typing indicator immediately when first character appears
+          if (accumulatedText.length === 0) {
+            dispatch(setTyping(false))
+          }
+          accumulatedText += textChunk
+          // Update streaming message with new chunk
+          dispatch(updateStreamingMessage(messageId, textChunk))
+        }
+      )
+      
+      // Ensure typing is cleared
+      dispatch(setTyping(false))
+      
+      // End streaming with final text
+      dispatch(endStreamingMessage(messageId, apiResponse.text))
+      
+      // Show toast if using fallback
+      if (!apiResponse.isRealAPI && apiResponse.fallbackReason) {
+        console.log('Using fallback AI:', apiResponse.fallbackReason)
+      }
+      
+    } catch (error) {
+      dispatch(setTyping(false))
+      console.error('AI Response Error:', error)
+      
+      // End streaming with error message
+      const errorMessage = "I apologize, but I'm having trouble processing your message right now. Could you please try again?"
+      dispatch(endStreamingMessage(messageId, errorMessage))
+    }
+  }
+}
+
+// Legacy function for non-streaming (fallback)
+export const sendAIResponseLegacy = (chatroomId, userMessage, conversationHistory = [], images = []) => {
   return async (dispatch, getState) => {
     dispatch(setTyping(true))
     

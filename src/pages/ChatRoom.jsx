@@ -12,11 +12,13 @@ import {
   Moon,
   Sun,
   Loader2,
-  ChevronUp
+  ChevronUp,
+  Square
 } from 'lucide-react'
 import { addMessage, sendAIResponse, deleteChatroom, loadOlderMessages } from '../store/chatActions'
 import { toggleTheme } from '../store/themeActions'
 import { generateSkeletonItems } from '../utils/mockData'
+import TypewriterText from '../components/TypewriterText'
 
 function ChatRoom() {
   const { chatId } = useParams()
@@ -31,17 +33,37 @@ function ChatRoom() {
   const [page, setPage] = useState(1)
   const [loadingOlderMessages, setLoadingOlderMessages] = useState(false)
   const [hasMoreMessages, setHasMoreMessages] = useState(true)
+  const [isGenerating, setIsGenerating] = useState(false)
   
-  const { chatrooms, messages, isTyping } = useSelector(state => state.chat)
+  const { chatrooms, messages, isTyping, streamingMessage } = useSelector(state => state.chat)
   const { isDarkMode } = useSelector(state => state.theme)
   
   const currentChat = chatrooms.find(chat => chat.id === chatId)
   const chatMessages = messages[chatId] || []
   
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when new messages arrive or streaming updates
   useEffect(() => {
     scrollToBottom()
-  }, [chatMessages.length, isTyping])
+  }, [chatMessages.length, isTyping, streamingMessage?.text])
+
+  // Continuous scroll during streaming to follow the cursor
+  useEffect(() => {
+    if (streamingMessage && streamingMessage.text) {
+      // Scroll more frequently during streaming for smooth following
+      const scrollTimer = setTimeout(() => {
+        scrollToBottom()
+      }, 50) // Very frequent scrolling during streaming
+      
+      return () => clearTimeout(scrollTimer)
+    }
+  }, [streamingMessage?.text])
+
+  // Also scroll on every character for immediate following
+  useEffect(() => {
+    if (streamingMessage) {
+      scrollToBottom()
+    }
+  }, [streamingMessage?.text?.length])
   
   // Handle initial load
   useEffect(() => {
@@ -52,11 +74,20 @@ function ChatRoom() {
   }, [currentChat, navigate])
   
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    // Use immediate scroll during streaming for better UX
+    if (messagesEndRef.current) {
+      const behavior = streamingMessage ? 'instant' : 'smooth'
+      messagesEndRef.current.scrollIntoView({ 
+        behavior, 
+        block: 'end', 
+        inline: 'nearest' 
+      })
+    }
   }
   
   const handleSendMessage = async () => {
     if (!message.trim() && selectedImages.length === 0) return
+    if (isGenerating) return // Prevent sending while generating
     
     const messageData = {
       text: message.trim() || (selectedImages.length > 0 ? `${selectedImages.length} image${selectedImages.length > 1 ? 's' : ''}` : ''),
@@ -67,15 +98,25 @@ function ChatRoom() {
     // Add user message
     dispatch(addMessage(chatId, messageData))
     
-    // Clear input
+    // Clear input and set generating state
     setMessage('')
     setSelectedImages([])
+    setIsGenerating(true)
     
     // Send AI response with conversation history
     setTimeout(() => {
       const conversationHistory = chatMessages.slice(-5) // Last 5 messages for context
       dispatch(sendAIResponse(chatId, messageData.text, conversationHistory, selectedImages))
-    }, 100) // Reduced delay
+        .finally(() => {
+          setIsGenerating(false)
+        })
+    }, 100)
+  }
+  
+  const handleStopGeneration = () => {
+    setIsGenerating(false)
+    // You could add logic here to actually cancel the API request
+    // For now, we'll just stop the visual indicators
   }
   
   const handleKeyPress = (e) => {
@@ -228,7 +269,7 @@ function ChatRoom() {
                 {currentChat.title}
               </h1>
               <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                {isTyping ? 'Gemini is typing...' : 'Online'}
+                {(isGenerating || isTyping) && (!streamingMessage || streamingMessage.text === '') ? 'Gemini is thinking...' : streamingMessage ? 'Gemini is typing...' : 'Online'}
               </p>
             </div>
           </div>
@@ -271,8 +312,11 @@ function ChatRoom() {
       <div 
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4"
+        className="flex-1 messages-scrollable px-3 sm:px-4 pt-16 sm:pt-24 pb-12 space-y-4 sm:space-y-6"
       >
+        {/* Top spacer for first message visibility */}
+        <div className="h-8 sm:h-12"></div>
+        
         {/* Load more button */}
         {hasMoreMessages && (
           <div className="text-center">
@@ -346,7 +390,18 @@ function ChatRoom() {
                     className="w-full rounded-lg mb-2 max-h-32 sm:max-h-48 object-cover"
                   />
                 )}
-                <p className="whitespace-pre-wrap break-words">{msg.text}</p>
+                {msg.sender === 'ai' ? (
+                  <TypewriterText 
+                    text={msg.text}
+                    speed={30}
+                    showCursor={true}
+                    isComplete={!msg.isStreaming}
+                    isStreaming={msg.isStreaming || false}
+                    className="whitespace-pre-wrap break-words"
+                  />
+                ) : (
+                  <p className="whitespace-pre-wrap break-words">{msg.text}</p>
+                )}
                 
                 {/* Copy button */}
                 <button
@@ -367,20 +422,23 @@ function ChatRoom() {
           </div>
         ))}
         
-        {/* Typing indicator */}
-        {isTyping && (
+        {/* Show loader while waiting for response (before any streaming content) */}
+        {(isGenerating || isTyping) && !streamingMessage && (
           <div className="flex justify-start">
             <div className="message-bubble message-ai">
-              <div className="flex space-x-1">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              <div className="flex items-center space-x-2">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                </div>
+                <span className="text-xs text-gray-500 dark:text-gray-400">Thinking...</span>
               </div>
             </div>
           </div>
         )}
         
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} className="pb-12" />
       </div>
 
       {/* Message Input */}
@@ -409,8 +467,9 @@ function ChatRoom() {
         <div className="flex items-end space-x-2 sm:space-x-3">
           {/* Image upload */}
           <button
-            onClick={() => fileInputRef.current?.click()}
-            className="p-1.5 sm:p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex-shrink-0"
+            onClick={() => !isGenerating && !isTyping && !streamingMessage && fileInputRef.current?.click()}
+            disabled={isGenerating || isTyping || streamingMessage}
+            className="p-1.5 sm:p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Upload image"
           >
             <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -432,23 +491,34 @@ function ChatRoom() {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyPress}
-              placeholder="Type a message..."
+              placeholder={isGenerating || isTyping || streamingMessage ? "AI is responding..." : "Type a message..."}
               rows={1}
-              className="w-full max-h-32 px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none text-sm sm:text-base"
+              disabled={isGenerating || isTyping || streamingMessage}
+              className="w-full max-h-32 px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none text-sm sm:text-base disabled:opacity-60 disabled:cursor-not-allowed"
               style={{ minHeight: '36px' }}
               autoComplete="off"
             />
           </div>
           
-          {/* Send button */}
-          <button
-            onClick={handleSendMessage}
-            disabled={!message.trim() && selectedImages.length === 0}
-            className="p-1.5 sm:p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
-            aria-label="Send message"
-          >
-            <Send className="w-4 h-4 sm:w-5 sm:h-5" />
-          </button>
+          {/* Send/Stop button */}
+          {isGenerating || isTyping || streamingMessage ? (
+            <button
+              onClick={handleStopGeneration}
+              className="p-1.5 sm:p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex-shrink-0"
+              aria-label="Stop generation"
+            >
+              <Square className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+          ) : (
+            <button
+              onClick={handleSendMessage}
+              disabled={!message.trim() && selectedImages.length === 0}
+              className="p-1.5 sm:p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+              aria-label="Send message"
+            >
+              <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+          )}
         </div>
       </div>
     </div>

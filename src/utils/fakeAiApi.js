@@ -108,63 +108,96 @@ function detectPersonality(message) {
   return 'helpful'
 }
 
+// Generate contextual AI responses based on user input
+const generateContextualResponse = (userMessage) => {
+  const lowerMessage = userMessage.toLowerCase()
+  
+  // Direct question patterns
+  if (lowerMessage.includes('what is') || lowerMessage.includes('what are')) {
+    return `Great question! Based on what you're asking about, I can explain that this is a topic that involves multiple aspects. Let me break it down for you in a way that's easy to understand.`
+  }
+  
+  if (lowerMessage.includes('how to') || lowerMessage.includes('how do') || lowerMessage.includes('how can')) {
+    return `I'd be happy to help you with that! Here's a step-by-step approach you can follow: First, you'll want to understand the basics, then practice with simple examples, and gradually work your way up to more complex scenarios.`
+  }
+  
+  if (lowerMessage.includes('why') || lowerMessage.includes('reason')) {
+    return `That's an excellent question about the reasoning behind this. There are several factors that contribute to this, including historical context, practical considerations, and current best practices in the field.`
+  }
+  
+  if (lowerMessage.includes('help') || lowerMessage.includes('assist')) {
+    return `I'm here to help! Based on what you've described, I can definitely assist you with this. Let's work through this together step by step.`
+  }
+  
+  if (lowerMessage.includes('explain') || lowerMessage.includes('describe')) {
+    return `I'd be glad to explain this concept to you. This is actually quite interesting and has several important components that work together to create the overall effect you're asking about.`
+  }
+  
+  // Math/calculation related
+  if (lowerMessage.match(/\d+/) && (lowerMessage.includes('+') || lowerMessage.includes('-') || lowerMessage.includes('*') || lowerMessage.includes('/') || lowerMessage.includes('calculate'))) {
+    return `I can help you with this calculation! For mathematical problems like this, it's important to follow the proper order of operations and double-check our work.`
+  }
+  
+  // Programming related
+  if (lowerMessage.match(/\b(code|programming|javascript|python|html|css|react|function|variable|array|object)\b/)) {
+    return `Great programming question! This involves some key concepts in software development. Let me walk you through the approach and best practices for handling this type of problem.`
+  }
+  
+  // General knowledge
+  if (lowerMessage.includes('tell me about') || lowerMessage.includes('information about')) {
+    return `I'd be happy to share some information about this topic! This is actually quite fascinating and has some interesting aspects that many people find surprising.`
+  }
+  
+  // Default contextual response
+  return `Thanks for your question! I understand you're asking about this topic, and I think I can provide some helpful insights. Let me address the key points you've raised.`
+}
+
 // Main function to generate AI response
 export const generateAIResponse = async (userMessage, conversationHistory = [], images = []) => {
   // Shorter API delay for better UX
   await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 500))
   
-  const topic = detectTopic(userMessage)
-  const personality = detectPersonality(userMessage)
-  
   let response = ''
   
   // Handle images if present
   if (images && images.length > 0) {
-    const imageResponses = [
-      `I can see you've shared ${images.length} image${images.length > 1 ? 's' : ''} with me. Let me analyze what I see.`,
-      `Thanks for sharing the image${images.length > 1 ? 's' : ''}! I can help you understand or work with what you've shown me.`,
-      `I notice you've uploaded ${images.length} image${images.length > 1 ? 's' : ''}. What would you like to know about ${images.length > 1 ? 'them' : 'it'}?`,
-      `Great! I can see the image${images.length > 1 ? 's' : ''} you've shared. How can I help you with ${images.length > 1 ? 'them' : 'it'}?`,
-      `I've received your image${images.length > 1 ? 's' : ''}. What specific questions do you have about what you've shown me?`
-    ]
-    response = imageResponses[Math.floor(Math.random() * imageResponses.length)]
+    response = `I can see you've shared ${images.length} image${images.length > 1 ? 's' : ''} with me. `
     
     // Add context about the message if provided
     if (userMessage && userMessage.trim() && !userMessage.includes('image')) {
-      response += ` Regarding your question: "${userMessage.trim()}" - I'd be happy to help!`
+      response += `Regarding your question: "${userMessage.trim()}" - I'd be happy to analyze the image${images.length > 1 ? 's' : ''} and provide insights based on what I can see.`
+    } else {
+      response += `What specific questions do you have about what you've shown me?`
     }
   } else {
-    // First try topic-specific responses
-    if (topicResponses[topic]) {
-      response = topicResponses[topic][Math.floor(Math.random() * topicResponses[topic].length)]
-    } else {
-      // Fall back to personality-based responses
-      const personalityResponses = aiPersonalities[personality]
-      response = personalityResponses[Math.floor(Math.random() * personalityResponses.length)]
-    }
+    // Generate contextual response based on user message
+    response = generateContextualResponse(userMessage)
   }
   
-  // Add contextual follow-up based on message length
-  if (userMessage.length > 100) {
-    const followUps = [
-      " That's quite a detailed question you've asked!",
-      " I appreciate you providing so much context.",
-      " You've given me a lot to think about here.",
-      " Thanks for the comprehensive question!"
-    ]
-    response += followUps[Math.floor(Math.random() * followUps.length)]
+  // Add some variety to responses
+  const endings = [
+    ' Feel free to ask if you need more clarification!',
+    ' Let me know if you have any follow-up questions.',
+    ' I hope this helps! Is there anything specific you\'d like me to elaborate on?',
+    ' Would you like me to go deeper into any particular aspect?',
+    ' Does this answer your question, or would you like more details?'
+  ]
+  
+  // Add an ending occasionally
+  if (Math.random() > 0.3) {
+    response += endings[Math.floor(Math.random() * endings.length)]
   }
   
   // Add conversation continuity
-  if (conversationHistory.length > 3) {
+  if (conversationHistory.length > 2) {
     const continuity = [
-      " Building on our earlier conversation,",
-      " As we've been discussing,",
-      " Following up on what we talked about,",
-      " Continuing our chat,"
+      'Building on what we discussed earlier, ',
+      'Following up on our conversation, ',
+      'As we continue our discussion, ',
+      'To expand on our previous topic, '
     ]
     if (Math.random() > 0.7) {
-      response = continuity[Math.floor(Math.random() * continuity.length)] + " " + response.toLowerCase()
+      response = continuity[Math.floor(Math.random() * continuity.length)] + response.toLowerCase()
     }
   }
   
