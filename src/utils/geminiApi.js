@@ -1,115 +1,55 @@
-// Real Gemini API integration
-const GEMINI_API_KEY =  'AIzaSyAZfRy66NEcrEkzn2X3fvqjoN-3-Iy-qmI'
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
-const GEMINI_STREAM_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse'
+// Secure API integration via Netlify Functions
+const API_BASE_URL = import.meta.env.DEV ? '' : '/.netlify/functions'
+const IS_LOCAL_DEV = import.meta.env.DEV
 
 export const callGeminiAPI = async (message, conversationHistory = [], images = []) => {
-  try {
-    // Format conversation history for Gemini API
-    const contents = []
+  // Use fake API in local development
+  if (IS_LOCAL_DEV) {
+    console.log('Using fake API for local development')
+    const { generateAIResponse } = await import('./fakeAiApi')
+    const fallbackResponse = await generateAIResponse(message, conversationHistory, images)
     
-    // Add conversation history
-    conversationHistory.forEach(msg => {
-      const parts = [{ text: msg.text }]
-      
-      // Add images if they exist in conversation history
-      if (msg.images && msg.images.length > 0) {
-        msg.images.forEach(image => {
-          if (image.src && image.src.startsWith('data:image/')) {
-            // Extract base64 data and mime type
-            const [mimeData, base64Data] = image.src.split(',')
-            const mimeType = mimeData.split(':')[1].split(';')[0]
-            
-            parts.push({
-              inline_data: {
-                mime_type: mimeType,
-                data: base64Data
-              }
-            })
-          }
-        })
-      }
-      
-      contents.push({
-        parts: parts,
-        role: msg.sender === 'user' ? 'user' : 'model'
-      })
-    })
-    
-    // Add current user message with images
-    const currentMessageParts = [{ text: message }]
-    
-    // Add current images if they exist
-    if (images && images.length > 0) {
-      images.forEach(image => {
-        if (image.src && image.src.startsWith('data:image/')) {
-          // Extract base64 data and mime type
-          const [mimeData, base64Data] = image.src.split(',')
-          const mimeType = mimeData.split(':')[1].split(';')[0]
-          
-          currentMessageParts.push({
-            inline_data: {
-              mime_type: mimeType,
-              data: base64Data
-            }
-          })
-        }
-      })
+    return {
+      success: true,
+      text: fallbackResponse,
+      isRealAPI: false,
+      fallbackReason: 'Local development mode'
     }
-    
-    contents.push({
-      parts: currentMessageParts,
-      role: 'user'
-    })
+  }
 
-    const response = await fetch(GEMINI_API_URL, {
+  try {
+    const response = await fetch(`${API_BASE_URL}/gemini-chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-goog-api-key': GEMINI_API_KEY,
       },
       body: JSON.stringify({
-        contents: contents,
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 1024,
-        },
-        safetySettings: [
-          {
-            category: 'HARM_CATEGORY_HARASSMENT',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-          },
-          {
-            category: 'HARM_CATEGORY_HATE_SPEECH',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-          }
-        ]
+        message,
+        conversationHistory,
+        images
       })
     })
 
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(`Gemini API Error: ${errorData.error?.message || 'Unknown error'}`)
-    }
-
     const data = await response.json()
     
-    if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
-      return {
-        success: true,
-        text: data.candidates[0].content.parts[0].text,
-        isRealAPI: true
+    if (!response.ok) {
+      if (data.fallback) {
+        // Server suggested fallback
+        throw new Error(data.error)
       }
-    } else {
-      throw new Error('Invalid response format from Gemini API')
+      throw new Error(data.error || `Server error: ${response.status}`)
+    }
+
+    return {
+      success: true,
+      text: data.text,
+      isRealAPI: data.isRealAPI
     }
 
   } catch (error) {
-    console.error('Gemini API Error:', error)
+    console.error('Secure API Error:', error)
     
-    // Fallback to fake API if real API fails
+    // Fallback to fake API if server fails
     const { generateAIResponse } = await import('./fakeAiApi')
     const fallbackResponse = await generateAIResponse(message, conversationHistory, images)
     
@@ -124,150 +64,68 @@ export const callGeminiAPI = async (message, conversationHistory = [], images = 
 
 // Stream response function for typewriter effect
 export const callGeminiAPIStream = async (message, conversationHistory = [], images = [], onChunk) => {
-  try {
-    // Format conversation history for Gemini API
-    const contents = []
-    
-    // Add conversation history
-    conversationHistory.forEach(msg => {
-      const parts = [{ text: msg.text }]
-      
-      // Add images if they exist in conversation history
-      if (msg.images && msg.images.length > 0) {
-        msg.images.forEach(image => {
-          if (image.src && image.src.startsWith('data:image/')) {
-            const [mimeData, base64Data] = image.src.split(',')
-            const mimeType = mimeData.split(':')[1].split(';')[0]
-            
-            parts.push({
-              inline_data: {
-                mime_type: mimeType,
-                data: base64Data
-              }
-            })
-          }
-        })
-      }
-      
-      contents.push({
-        parts: parts,
-        role: msg.sender === 'user' ? 'user' : 'model'
-      })
-    })
-    
-    // Add current user message with images
-    const currentMessageParts = [{ text: message }]
-    
-    // Add current images if they exist
-    if (images && images.length > 0) {
-      images.forEach(image => {
-        if (image.src && image.src.startsWith('data:image/')) {
-          const [mimeData, base64Data] = image.src.split(',')
-          const mimeType = mimeData.split(':')[1].split(';')[0]
-          
-          currentMessageParts.push({
-            inline_data: {
-              mime_type: mimeType,
-              data: base64Data
-            }
-          })
-        }
-      })
-    }
-    
-    contents.push({
-      parts: currentMessageParts,
-      role: 'user'
-    })
+  // Use fake streaming in local development
+  if (IS_LOCAL_DEV) {
+    console.log('Using fake streaming for local development')
+    return await streamFakeResponse(message, conversationHistory, images, onChunk)
+  }
 
-    const response = await fetch(GEMINI_STREAM_URL, {
+  try {
+    // For now, use the regular secure API and simulate streaming
+    // Real streaming would require WebSockets or Server-Sent Events
+    const response = await fetch(`${API_BASE_URL}/gemini-stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-goog-api-key': GEMINI_API_KEY,
       },
       body: JSON.stringify({
-        contents: contents,
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 1024,
-        },
-        safetySettings: [
-          {
-            category: 'HARM_CATEGORY_HARASSMENT',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-          },
-          {
-            category: 'HARM_CATEGORY_HATE_SPEECH',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-          }
-        ]
+        message,
+        conversationHistory,
+        images
       })
     })
 
+    const data = await response.json()
+    
     if (!response.ok) {
-      throw new Error(`Gemini API Stream Error: ${response.status}`)
+      if (data.fallback) {
+        // Server suggested fallback
+        throw new Error(data.error)
+      }
+      throw new Error(data.error || `Server error: ${response.status}`)
     }
 
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder()
-    let accumulatedText = ''
-    let buffer = ''
-
-    try {
-      while (true) {
-        const { done, value } = await reader.read()
-        
-        if (done) break
-        
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
-        
-        // Keep the last incomplete line in buffer
-        buffer = lines.pop() || ''
-        
-        for (const line of lines) {
-          const trimmedLine = line.trim()
-          
-          if (trimmedLine.startsWith('data: ')) {
-            const dataContent = trimmedLine.substring(6).trim()
-            
-            if (dataContent === '[DONE]') {
-              break
-            }
-            
-            try {
-              const jsonData = JSON.parse(dataContent)
-              
-              if (jsonData.candidates?.[0]?.content?.parts?.[0]?.text) {
-                const newText = jsonData.candidates[0].content.parts[0].text
-                accumulatedText += newText
-                if (onChunk) {
-                  onChunk(newText)
-                }
-              }
-            } catch (parseError) {
-              console.log('Parse error for line:', dataContent, parseError)
-              // Ignore parsing errors for incomplete JSON
-            }
-          }
-        }
+    // Simulate streaming by sending the response character by character
+    const fullText = data.text
+    for (let i = 0; i < fullText.length; i++) {
+      const char = fullText[i]
+      if (onChunk) {
+        onChunk(char)
       }
-    } finally {
-      reader.releaseLock()
+      
+      // Add realistic delays
+      let delay = 20 + Math.random() * 40
+      if (['.', '!', '?'].includes(char)) {
+        delay = 100 + Math.random() * 100
+      } else if ([',', ';', ':'].includes(char)) {
+        delay = 50 + Math.random() * 50
+      } else if (char === ' ') {
+        delay = 30 + Math.random() * 30
+      } else if (char === '\n') {
+        delay = 80 + Math.random() * 80
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, delay))
     }
 
     return {
       success: true,
-      text: accumulatedText,
-      isRealAPI: true
+      text: fullText,
+      isRealAPI: data.isRealAPI
     }
 
   } catch (error) {
-    console.error('Gemini Stream API Error:', error)
-    console.log('Falling back to fake streaming response')
+    console.error('Secure Streaming API Error:', error)
     
     // Fallback to fake streaming response
     return await streamFakeResponse(message, conversationHistory, images, onChunk)

@@ -251,9 +251,10 @@ function ChatRoom() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col relative overflow-hidden"
+         style={{ height: '100vh', height: '100dvh' }}>
       {/* Header */}
-      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-3 sm:p-4 flex-shrink-0">
         <div className="flex items-center justify-between">
           {/* Left side */}
           <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
@@ -312,10 +313,15 @@ function ChatRoom() {
       <div 
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="flex-1 messages-scrollable px-3 sm:px-4 pt-16 sm:pt-24 pb-12 space-y-4 sm:space-y-6"
+        className="flex-1 overflow-y-auto overflow-x-hidden px-2 sm:px-4 pt-4 pb-4 space-y-3 sm:space-y-4"
+        style={{ 
+          WebkitOverflowScrolling: 'touch',
+          maxHeight: 'calc(100vh - 140px)',
+          maxHeight: 'calc(100dvh - 140px)'
+        }}
       >
         {/* Top spacer for first message visibility */}
-        <div className="h-8 sm:h-12"></div>
+        <div className="h-2 sm:h-4"></div>
         
         {/* Load more button */}
         {hasMoreMessages && (
@@ -363,7 +369,7 @@ function ChatRoom() {
             key={msg.id}
             className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
           >
-            <div className="group max-w-[280px] sm:max-w-xs lg:max-w-md">
+            <div className="group max-w-[85%] sm:max-w-xs lg:max-w-md">
               <div
                 className={`message-bubble ${
                   msg.sender === 'user' ? 'message-user' : 'message-ai'
@@ -438,11 +444,12 @@ function ChatRoom() {
           </div>
         )}
         
-        <div ref={messagesEndRef} className="pb-12" />
+        <div ref={messagesEndRef} className="pb-4 sm:pb-6" />
       </div>
 
       {/* Message Input */}
-      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4">
+      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-2 sm:p-4 flex-shrink-0"
+           style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}>
         {/* Images preview */}
         {selectedImages.length > 0 && (
           <div className="mb-3 flex flex-wrap gap-2">
@@ -464,7 +471,7 @@ function ChatRoom() {
           </div>
         )}
         
-        <div className="flex items-end space-x-2 sm:space-x-3">
+        <div className="flex items-end space-x-1 sm:space-x-3">
           {/* Image upload */}
           <button
             onClick={() => !isGenerating && !isTyping && !streamingMessage && fileInputRef.current?.click()}
@@ -494,8 +501,8 @@ function ChatRoom() {
               placeholder={isGenerating || isTyping || streamingMessage ? "AI is responding..." : "Type a message..."}
               rows={1}
               disabled={isGenerating || isTyping || streamingMessage}
-              className="w-full max-h-32 px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none text-sm sm:text-base disabled:opacity-60 disabled:cursor-not-allowed"
-              style={{ minHeight: '36px' }}
+              className="w-full max-h-24 sm:max-h-32 px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none text-sm sm:text-base disabled:opacity-60 disabled:cursor-not-allowed"
+              style={{ minHeight: '38px', fontSize: '16px' }}
               autoComplete="off"
             />
           </div>

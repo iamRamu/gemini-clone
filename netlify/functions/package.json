@@ -1,0 +1,9 @@
+{
+  "name": "gemini-chat-functions",
+  "version": "1.0.0",
+  "description": "Netlify Functions for secure Gemini API calls",
+  "main": "index.js",
+  "dependencies": {
+    "node-fetch": "^2.6.7"
+  }
+}
